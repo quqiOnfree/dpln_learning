@@ -71,13 +71,12 @@ class Sigmoid(BaseLayer):
 class Relu(BaseLayer):
     def forward(self, *args):
         x = args[0]
+        self.x = x
         self.y = np.maximum(0, x)
         return self.y
 
     def backward(self, dout):
-        output = dout.copy()
-        output[dout<=0] = 0
-        return output
+        return dout * (self.x > 0)
 
 class Gelu(BaseLayer):
     def forward(self, *args):
@@ -91,15 +90,15 @@ class Gelu(BaseLayer):
 class Softmax(BaseLayer):
     def forward(self, *args):
         x = args[0]
-        c = np.max(x)
+        c = np.max(x, axis=1, keepdims=True)
         self.e = np.exp(x - c)
-        self.s = np.sum(self.e)
+        self.s = np.sum(self.e, axis=1, keepdims=True)
         return self.e / self.s
 
     def backward(self, dout):
         s = self.e / self.s
-        J = np.diag(s) - np.outer(s, s)
-        return J @ dout
+        dot = np.sum(dout * s, axis=1, keepdims=True)
+        return s * (dout - dot)
 
 class CrossEntropyError(BaseLayer):
     def __init__(self):

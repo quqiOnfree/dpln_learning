@@ -57,7 +57,7 @@ if __name__ == "__main__":
             x = x_test[i:i+256]
             t = t_test[i:i+256]
             y = mynet.forward(x)
-            tls += np.sum(loss.loss(y, np.eye(10)[t]))
+            tls += np.sum(loss.loss(y, np.eye(10)[t])) * 256
         nloss = tls/len(x_test)
         print(f"training loop: {j}, avg loss: {nloss}")
         if nloss < mloss:
@@ -68,3 +68,8 @@ if __name__ == "__main__":
                 continue
             else:
                 break
+    for i in range(0, 10):
+        x = x_test[i:i+1]
+        t = t_test[i:i+1]
+        y = mynet.forward(x)
+        print(np.argmax(y, axis=1), t)
