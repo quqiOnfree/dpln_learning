@@ -26,3 +26,15 @@ class BaseLayer(ABC):
 
     def set_optimizer(self, optimizer: BaseOptimizer):
         pass
+
+class BaseInitilizer:
+    @abstractmethod
+    def set_shape(self, shape: tuple[int, int]):
+        pass
+
+    @abstractmethod
+    def generate(self) -> np.ndarray:
+        pass
+
+    def __call__(self) -> np.ndarray:
+        return self.generate()

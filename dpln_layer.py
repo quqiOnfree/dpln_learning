@@ -1,6 +1,7 @@
 from scipy.stats import norm
 import numpy as np
-from dpln_template import BaseLayer, BaseOptimizer
+from dpln_template import *
+from dpln_initilizer import HeInitilizer
 
 class MulLayer(BaseLayer):
     def __init__(self):
@@ -29,9 +30,12 @@ class AddLayer(BaseLayer):
         return dx, dy
     
 class Linear(BaseLayer):
-    def __init__(self, input_num, output_num, bias=True):
+    def __init__(self, input_num: int, output_num: int, bias=True,
+                 initilizer: BaseInitilizer = HeInitilizer()):
         super().__init__()
-        self.W = np.random.randn(input_num, output_num) * np.sqrt(2.0 / input_num)
+        self.initilizer = initilizer
+        self.initilizer.set_shape((input_num, output_num))
+        self.W = self.initilizer.generate()
         self.bias = bias
         if bias:
             self.B = np.zeros((1, output_num))
