@@ -1,6 +1,20 @@
 from dpln_template import BaseInitilizer
 import numpy as np
 
+class ZerosInitilizer(BaseInitilizer):
+    def set_shape(self, shape: tuple[int, int]):
+        self.shape = shape
+     
+    def generate(self):
+        return np.zeros(self.shape)
+
+class OnesInitilizer(BaseInitilizer):
+    def set_shape(self, shape: tuple[int, int]):
+        self.shape = shape
+     
+    def generate(self):
+        return np.ones(self.shape)
+
 class NormInitilizer(BaseInitilizer):
     def set_shape(self, shape: tuple[int, int]):
         self.shape = shape

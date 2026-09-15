@@ -2,6 +2,7 @@ from scipy.stats import norm
 import numpy as np
 from dpln_template import *
 from dpln_initilizer import HeInitilizer
+from dpln_template import BaseOptimizer
 
 class MulLayer(BaseLayer):
     def __init__(self):
@@ -103,6 +104,41 @@ class Softmax(BaseLayer):
         s = self.e / self.s
         dot = np.sum(dout * s, axis=1, keepdims=True)
         return s * (dout - dot)
+
+class BatchNorm(BaseLayer):
+    def __init__(self, input_output_num: int) -> None:
+        super().__init__()
+        self.input_output_num = input_output_num
+        self.gamma = np.ones((1, input_output_num))
+        self.beta = np.zeros((1, input_output_num))
+        self.epsilon = 1e-7
+
+    def forward(self, *args):
+        x = args[0]
+        self.x = x
+        self.mu = 1/self.input_output_num*np.sum(x,axis=1)
+        self.centered_x=x-self.mu
+        self.var = 1/self.input_output_num*np.sum(self.centered_x**2,axis=1)
+        self.std=np.sqrt(self.var)
+        self.nonzero_std=self.std+self.epsilon
+        self.o_x = self.centered_x/self.nonzero_std
+        return self.gamma*self.o_x+self.beta
+
+    def backward(self, dout):
+        dbeta=dout.sum(axis=0)
+        dgamma=np.sum(dout*self.o_x,axis=0)
+        dmu=1/self.input_output_num
+        dvar=(2*self.input_output_num-2)/self.input_output_num**2*self.centered_x
+        dx=dout*self.gamma*((1-dmu)*self.nonzero_std-dvar/2/self.std*self.centered_x)/self.nonzero_std**2
+        self.beta_optimizer.update(self.beta, dbeta)
+        self.gamma_optimizer.update(self.gamma,dgamma)
+        return dx
+
+    def set_optimizer(self, optimizer: BaseOptimizer):
+        self.beta_optimizer=optimizer.copy()
+        self.beta_optimizer.set_shape(self.beta.shape)
+        self.gamma_optimizer=optimizer.copy()
+        self.gamma_optimizer.set_shape(self.gamma.shape)
 
 class CrossEntropyError(BaseLayer):
     def __init__(self):
